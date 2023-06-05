@@ -6,6 +6,7 @@ import com.myblog.blogapp.payload.PostDto;
 import com.myblog.blogapp.payload.PostResponse;
 import com.myblog.blogapp.repository.PostRepository;
 import com.myblog.blogapp.service.PostService;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,8 +21,13 @@ public class PostServiceImpl implements PostService {
 
     private PostRepository postRepo;
 
-    public PostServiceImpl(PostRepository postRepo) {
+    private ModelMapper mapper;
+
+
+// this is constructor
+    public PostServiceImpl(PostRepository postRepo, ModelMapper  mapper) {
         this.postRepo = postRepo;
+        this.mapper=mapper;
     }
 
     @Override
@@ -39,9 +45,12 @@ public class PostServiceImpl implements PostService {
     public PostResponse getAllPost(int pageNo, int pageSize,String sortBy,String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase(
                 Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
         Pageable pageable= PageRequest.of(pageNo,pageSize, sort);
         Page<Post> posts = postRepo.findAll(pageable);
+
         List<Post> content = posts.getContent();
+
         List<PostDto> contents = content.stream().map(post -> mapToDto(post)).collect(Collectors.toList());
 
         PostResponse postResponse=new PostResponse();
@@ -85,18 +94,24 @@ public class PostServiceImpl implements PostService {
     }
 
     public Post mapToEntity( PostDto postDto){
-        Post post = new Post();
-        post.setTitle(postDto.getTitle());
-        post.setDescription(postDto.getContent());
-        post.setContent(postDto.getContent());
+
+        Post post = mapper.map(postDto, Post.class);
+      // imp  // here no need to write code below like, all below code are written in 1 statement with the help of
+        // modelMapper library
+
+//        Post post = new Post();
+//        post.setTitle(postDto.getTitle());
+//        post.setDescription(postDto.getContent());
+//        post.setContent(postDto.getContent());
         return post;
     }
     public  PostDto mapToDto( Post post){
-        PostDto dto =new PostDto();
-        dto.setId(post.getId());
-        dto.setTitle(post.getTitle());
-        dto.setDescription(post.getDescription());
-        dto.setContent(post.getContent());
+        PostDto dto = mapper.map(post, PostDto.class);
+//        PostDto dto =new PostDto();
+//        dto.setId(post.getId());
+//        dto.setTitle(post.getTitle());
+//        dto.setDescription(post.getDescription());
+//        dto.setContent(post.getContent());
         return dto;
     }
 }
